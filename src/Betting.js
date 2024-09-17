@@ -3,16 +3,92 @@ import { useSimulateContract, useWriteContract, useWaitForTransactionReceipt, us
 import { parseEther } from 'viem';
 import axios from 'axios';
 import { HeadsUpAbi } from './Abi';
-import { config } from './config';
+import { config, contractAddress, graphEndpoint } from './config';
 
 const Betting = () => {
   const [betAmountInEth, setBetAmountInEth] = useState('');
   const [totalRound, setTotalRound] = useState(0);
   const {address} = useAccount({config: config});
+  const [holeCards, setHoleCards] = useState();
+  const [communityCards, setCommunityCards] = useState();
+
+  const fetchHoleCards = async() => {
+    const roundId = `${totalRound}-${contractAddress}`;
+    const holeCardsQuery = `
+    query GetTargetRound {
+      round(id: "${roundId}") {
+        epoch
+        holeCardsRevealed
+        apesCards {
+          card1 {
+            rank
+            suit
+          }
+          card2 {
+            rank
+            suit
+          }
+        }
+        punksCards {
+          card1 {
+            rank
+            suit
+          }
+          card2 {
+            rank
+            suit
+          }
+        }
+      }
+    }`
+    const response = await axios.post(graphEndpoint, {
+      query: holeCardsQuery,
+    });
+    console.log({holeCards: response.data.data.round});
+    setHoleCards(response.data.data.round);
+  }
+
+  const fetchCommunityCards = async() => {
+    const roundId = `${totalRound}-${contractAddress}`;
+    const communityCardsQuery = `
+    query GetTargetRound {
+      round(id: "${roundId}") {
+        epoch
+        communityCardsRevealed
+        communityCards {
+          card1 {
+            rank
+            suit
+          }
+          card2 {
+            rank
+            suit
+          }
+          card3 {
+            rank
+            suit
+          }
+          card4 {
+            rank
+            suit
+          }
+          card5 {
+            rank
+            suit
+          }
+        }
+      }
+    }`
+    const response = await axios.post(graphEndpoint, {
+      query: communityCardsQuery,
+    });
+    console.log({communityCards: response.data.data.round});
+    setCommunityCards(response.data.data.round);
+  }
 
   const fetchTotalRound = async () => {
     try {
-      const response = await axios.post('https://headsup-indexer.up.railway.app/', {
+      const response = await axios.post(graphEndpoint, {
         query: `
           query MyQuery {
             headsUps {
@@ -31,9 +107,15 @@ const Betting = () => {
     }
   };
 
+  const fetchData = async () => {
+    await fetchTotalRound();
+    await fetchHoleCards();
+    await fetchCommunityCards();
+  }
+
   useEffect(() => {
-    fetchTotalRound();
-    const interval = setInterval(fetchTotalRound, 5000); // Poll every 5 seconds
+    fetchData();
+    const interval = setInterval(fetchData, 5000); // Poll every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -42,7 +124,7 @@ const Betting = () => {
   async function awaitedEnterPunks() {
     const data = await writeContractAsync({
       account: address,
-      address: '0x57fC675381a9ec5CCC510dd01394a208382c16A4',
+      address: contractAddress,
       abi: HeadsUpAbi,
       functionName: 'enterPunks',
       args: [totalRound],
@@ -56,7 +138,7 @@ const Betting = () => {
   async function awaitedEnterApes() {
     const data = await writeContractAsync({
       account: address,
-      address: '0x57fC675381a9ec5CCC510dd01394a208382c16A4',
+      address: contractAddress,
       abi: HeadsUpAbi,
       functionName: 'enterApes',
       args: [totalRound],
@@ -70,7 +152,7 @@ const Betting = () => {
   function log() {
     console.log({
       account: address,
-      address: '0x57fC675381a9ec5CCC510dd01394a208382c16A4',
+      address: contractAddress,
       abi: HeadsUpAbi,
       functionName: 'enterApes',
       args: [totalRound],
