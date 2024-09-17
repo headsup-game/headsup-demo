@@ -45,6 +45,42 @@ const playfiAlbireo = {
       },
     },
 };
+
+export function getCardRankShortForm(rank) {
+  switch(rank.toLowerCase()) {
+    case 'one':
+      return '1';
+    case 'two':
+      return '2';
+    case 'three':
+      return '3';
+    case 'four':
+      return '4';
+    case 'five':
+      return '5';
+    case 'six':
+      return '6';
+    case 'seven':
+      return '7';
+    case 'eight':
+      return '8';
+    case 'nine':
+      return '9';
+    case 'ten':
+      return '0';
+    case 'jack':
+      return 'J';
+    case 'queen':
+      return 'Q';
+    case 'king':
+      return 'K';
+    case 'ace':
+      return 'A';
+    default:
+      return 'Invalid rank';
+  }
+}
+
 export const config = getDefaultConfig({
     appName: 'HeadsUp',
     projectId: 'fb1831c754537301a512f2f79a0db66a',
@@ -56,6 +92,6 @@ export const config = getDefaultConfig({
   });
 
 export const contractAddress = "0xB56CAF51A15A8a0217A64FCe9fa395cfE0441291";
-export const graphEndpoint = "http://localhost:42069/";
+export const graphEndpoint = "https://playfi-indexer-production.up.railway.app/";
 
 export const queryClient = new QueryClient();
